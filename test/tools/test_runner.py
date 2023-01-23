@@ -18,11 +18,12 @@ import utils
 from runner import Runner
 from global_config import GlobalConfig
 
-PROJECT_NAME = 'test_' + utils.randomword(12)
+GMT_PROJECT_NAME = 'test_' + utils.randomword(12)
 config = GlobalConfig(config_name='test-config.yml').config
 metric_providers_keys = config['measurement']['metric-providers'].keys()
-RUN_STD_ERR = ''
-RUN_STD_OUT = ''
+GMT_RUN_STDERR = ''
+GMT_RUN_STDOUT = ''
+GMT_SUCCESS_TOKEN = '>>>> MEASUREMENT SUCCESSFULLY COMPLETED <<<<'
 
 
 # Runs once per file before any test
@@ -37,31 +38,30 @@ def setup_module(module):
 
         project_id = DB().fetch_one('INSERT INTO "projects" ("name","uri","email","last_run","created_at") \
                     VALUES \
-                    (%s,%s,\'manual\',NULL,NOW()) RETURNING id;', params=(PROJECT_NAME, uri))[0]
+                    (%s,%s,\'manual\',NULL,NOW()) RETURNING id;', params=(GMT_PROJECT_NAME, uri))[0]
 
         # Run the application
         runner = Runner()
         runner.run(uri=uri, uri_type='folder', project_id=project_id)
 
-    global RUN_STD_ERR, RUN_STD_OUT
-    RUN_STD_ERR = err.getvalue()
-    RUN_STD_OUT = out.getvalue()
+    global GMT_RUN_STDERR, GMT_RUN_STDOUT
+    GMT_RUN_STDERR = err.getvalue()
+    GMT_RUN_STDOUT = out.getvalue()
 
 def test_no_errors():
     # Assert that there is no std.err output
-    assert RUN_STD_ERR == ''
+    assert GMT_RUN_STDERR == ''
 
 def test_cleanup_success():
     # Assert that Cleanup has run
-    assert re.search(
-        '>>>> MEASUREMENT SUCCESSFULLY COMPLETED <<<<<<', RUN_STD_OUT)
+    assert re.search(GMT_SUCCESS_TOKEN, GMT_RUN_STDOUT)
 
 def test_db_rows_are_written_and_presented():
     # for every metric provider, check that there were rows written in the DB with info for that provider
     # also check (in the same test, to save on a DB call) that the output to STD.OUT
     # "Imported XXX metrics from {metric_provider}" displays the same count as in the DB
 
-    project_id = utils.get_pid(PROJECT_NAME)
+    project_id = utils.get_pid(GMT_PROJECT_NAME)
     assert(project_id is not None or project_id != '')
     query = """
             SELECT
@@ -83,15 +83,14 @@ def test_db_rows_are_written_and_presented():
         ## Assert the provider in DB matches one of the metric providers in config
         assert d_provider in metric_providers
 
-        ## Assert the number of rows for that provider is at least 1
-        assert d_count > 0
+        ## Assert the number of rows for that provider is at least 50
+        assert d_count > 50
 
         ## Assert the information printed to std.out matches what's in the db
-        match = re.search(rf"Imported \S* (\d+) \S* metrics from\s*{d_provider}", RUN_STD_OUT)
+        match = re.search(rf"Imported \S* (\d+) \S* metrics from\s*{d_provider}", GMT_RUN_STDOUT)
         assert match is not None
         assert int(match.group(1)) == d_count
 
         ## Assert that all the providers in the config are represented
         metric_providers.remove(d_provider)
     assert len(metric_providers) == 0
-    
