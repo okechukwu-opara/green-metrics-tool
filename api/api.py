@@ -8,7 +8,7 @@ import sys
 import os
 
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 from fastapi import FastAPI, Request, Response
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel
@@ -208,7 +208,8 @@ async def get_measurements_single(project_id: str):
 
     if data is None or data == []:
         return {'success': False, 'err': 'Data is empty'}
-    return {'success': True, 'data': data}
+    return ORJSONResponse({'success': True, 'data': data})
+    #return
 
 
 # A route to return all of the available entries in our catalog.
