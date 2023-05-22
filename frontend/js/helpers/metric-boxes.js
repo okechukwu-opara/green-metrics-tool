@@ -170,13 +170,6 @@ const displaySimpleMetricBox = (phase, metric_name, metric_data, detail_data, co
         extra_label = `${max} ${max_unit} (MAX)`;
 
     }
-    let std_dev_text = '';
-    let std_dev_text_table = 'N/A';
-
-    if(detail_data.stddev == 0) std_dev_text = std_dev_text_table = `± 0.00%`;
-    else if(detail_data.stddev != null) {
-        std_dev_text = std_dev_text_table = `± ${((detail_data.stddev/detail_data.mean)*100).toFixed(2)}%`
-    }
 
     let scope = metric_name.split('_')
     scope = scope[scope.length-1]
@@ -191,12 +184,11 @@ const displaySimpleMetricBox = (phase, metric_name, metric_data, detail_data, co
         <td>${detail_data.name}</td>
         <td>${value}</td>
         <td>${unit}</td>
-        <td>${std_dev_text_table}</td>
         <td>${extra_label}</td>`;
 
     updateKeyMetric(
         phase, metric_name, metric_data.clean_name, detail_data.name,
-        value , std_dev_text, extra_label, unit,
+        value , '', extra_label, unit,
         metric_data.explanation, metric_data.source
     );
 }
