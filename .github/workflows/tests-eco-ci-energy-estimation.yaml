@@ -1,4 +1,4 @@
-name: Testing for @testing eco-ci-energy-estimation. Custom. No cron
+name: Testing for @testing eco-ci-energy-estimation. Custom. No cron. Fvckd
 run-name: Testing run for @testing eco-ci-energy-estimation
 on:
   workflow_dispatch:
